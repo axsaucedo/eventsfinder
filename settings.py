@@ -73,11 +73,13 @@ INSTALLED_APPS = (
     'autoload',
     'dbindexer',
 
+    'eventsfinder',
+
     # djangoappengine should come last, so it can override a few manage.py commands
     'djangoappengine',
-
-    'eventsfinder',
 )
+
+EMAIL_BACKEND = 'appengine_emailbackend.EmailBackend'
 
 # List of finder classes that know how to find static files in
 # various locations.

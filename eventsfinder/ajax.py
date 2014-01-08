@@ -1,7 +1,8 @@
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from google.appengine.api import mail
+from django.core.mail import send_mail
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 
 import json
 
@@ -27,13 +28,16 @@ def attend_event(request):
 
             attendee.save()
 
-#            send_async_mail("New attendee!"
-#                            , "<a href='http://events-finder.appspot.com/accounts/view/"+request.user.username+"'>"
-#                                                + request.user.first_name + " " + request.user.last_name + "</a> is now attending your event '"
-#                                                "<a href='http://events-finder.appspot.com/event/" + event_id + "/'>"
-#                                                + event.name + "</a>."
-#                            ,"hackasoton@gmail.com"
-#                            ,[event.creator.username])
+            to = [event.creator.username]
+            for tracker in event.attendee_set.filter(type='T'):
+                to.append(tracker.username)
+
+            msg = EmailMultiAlternatives()
+            msg.from_email = "hackasoton@gmail.com"
+            msg.to = to
+            msg.subject = "New Attendee!"
+            msg.body = "<a href='http://events-finder.appspot.com/accounts/view/" + request.user.username + "'>" + request.user.first_name + " " + request.user.last_name + " is now attending your event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
+            msg.send()
 
         else:
             attendee_instance = Attendee.objects.get(attendee=request.user, event=event)
@@ -41,7 +45,6 @@ def attend_event(request):
 
     except Exception, err:
         response['error'] = err.__str__()
-
 
 #    import smtplib
 #    smtp = smtplib.SMTP()
