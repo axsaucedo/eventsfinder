@@ -36,7 +36,7 @@ def attend_event(request):
             msg.from_email = "hackasoton@gmail.com"
             msg.to = to
             msg.subject = "New Attendee!"
-            msg.body = "<a href='http://events-finder.appspot.com/accounts/view/" + request.user.username + "'>" + request.user.first_name + " " + request.user.last_name + " is now attending your event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
+            msg.body = "<a href='http://events-finder.appspot.com/accounts/view/" + request.user.username + "'>" + request.user.first_name + " " + request.user.last_name + " is now attending the event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
             msg.send()
 
         else:
