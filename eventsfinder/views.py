@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.template.context import RequestContext
 from django.contrib.auth.decorators import login_required
 from eventsfinder.models import Event, Attendee, Staff
+from django.http import HttpResponseRedirect
 import settings
 
 from eventsfinder.tools.forms import EventCreationForm, EFUserCreationForm, EFUserEditForm, EFPasswordChangeForm
@@ -97,7 +98,7 @@ def edit_event(request, event_id):
 
     return render(request, 'edit_event.html', data)
 
-def edit_event(request, event_id):
+def delete_event(request, event_id):
 
     try:
         event = Event.objects.get(id=event_id)
@@ -111,7 +112,7 @@ def edit_event(request, event_id):
         # Event not found so raise an event not found
         return render(request, 'generic_message.html', { 'header' : 'Event not found...', 'message': err if settings.DEBUG else "Oops, we couldn't find the event you were looking for..." })
 
-    return reverse()
+    return HttpResponseRedirect(reverse('eventsfinder.views.home'))
 
 def view_event(request, event_id):
     data = {}
