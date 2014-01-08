@@ -1,13 +1,15 @@
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
-from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
+from eventsfinder.tools.toolbox import  send_async_mail
 
 import json
 
 from eventsfinder.models import Event, Attendee, Staff
 from django.contrib.auth.models import User
+
+import logging
 
 @login_required
 @require_POST
@@ -29,15 +31,19 @@ def attend_event(request):
             attendee.save()
 
             to = [event.creator.username]
-            for tracker in event.attendee_set.filter(type='T'):
-                to.append(tracker.username)
+            for attendee in event.attendee_set.all():
+                if not to.__contains__(attendee.attendee.username):
+                    to.append(attendee.attendee.username)
 
             msg = EmailMultiAlternatives()
             msg.from_email = "hackasoton@gmail.com"
             msg.to = to
             msg.subject = "New Attendee!"
-            msg.body = "<a href='http://events-finder.appspot.com/accounts/view/" + request.user.username + "'>" + request.user.first_name + " " + request.user.last_name + " is now attending the event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
-            msg.send()
+
+            body = "<a href='http://events-finder.appspot.com/accounts/view/" + request.user.username + "'>" + request.user.first_name + " " + request.user.last_name + "</a> is now " + ('attending' if attendee_type == 'A' else 'tracking') + " the event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
+            msg.body = body
+            msg.attach_alternative(body, 'text/html')
+            send_async_mail(msg)
 
         else:
             attendee_instance = Attendee.objects.get(attendee=request.user, event=event)
@@ -45,22 +51,6 @@ def attend_event(request):
 
     except Exception, err:
         response['error'] = err.__str__()
-
-#    import smtplib
-#    smtp = smtplib.SMTP()
-#    try:
-#        smtp.connect("smtp.gmail.com", 587)
-#        smtp.ehlo()
-#        smtp.starttls()
-#        smtp.ehlo()
-#        smtp.login("hackasoton@gmail.com", "HackaS0t0n")
-#
-#        tos = ["axsauze@gmail.com"]
-#        smtp.sendmail("hackasoton@gmail.com", tos, "hello")
-#    finally:
-#        smtp.quit()
-
-#    mail.send_mail("hackasoton@gmail.com", "axsauze@gmail.com", "hello", "world")
 
     return HttpResponse(json.dumps(response), content_type="application/json")
 
@@ -94,6 +84,22 @@ def add_staff(request):
         staff.imgurl = imgurl
 
         staff.save()
+
+
+        to = [event.creator.username]
+        for attendee in event.attendee_set.all():
+            if not to.__contains__(attendee.attendee.username):
+                to.append(attendee.attendee.username)
+
+        msg = EmailMultiAlternatives()
+        msg.from_email = "hackasoton@gmail.com"
+        msg.to = to
+        msg.subject = "New Attendee!"
+
+        body = "A new " + ("Organizer" if staff_type == "O" else ("Speaker" if staff_type == "S" else "Mentor")) + " has been added to the event <a href='http://events-finder.appspot.com/event/" + event_id + "'>" + event.name + "</a>!"
+        msg.body = body
+        msg.attach_alternative(body, 'text/html')
+        send_async_mail(msg)
 
         response['staff_id'] = staff.id
 

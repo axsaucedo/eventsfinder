@@ -124,6 +124,7 @@ def view_event(request, event_id):
         all_staff = Staff.objects.filter(event=event_id)
 
         data['attendees'] = all_attendees.filter(type='A')
+
         data['trackers'] = all_attendees.filter(type='T')
 
         data['organizers'] = all_staff.filter(type='O')
